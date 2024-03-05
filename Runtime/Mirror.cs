@@ -229,7 +229,7 @@ namespace kTools.Mirrors
         void BeginCameraRendering_FromAvatarNearClip(ScriptableRenderContext context, Camera camera) =>
             BeginCameraRendering(context, camera);
 
-        bool IsStereo(Camera camera) => camera.GetUniversalAdditionalCameraData().allowXRRendering && camera.cameraType != CameraType.SceneView;
+        bool IsStereo(Camera camera) => XRSettings.enabled && camera.GetUniversalAdditionalCameraData().allowXRRendering && camera.cameraType != CameraType.SceneView;
 
         void BeginCameraRendering(ScriptableRenderContext context, Camera camera)
         {
