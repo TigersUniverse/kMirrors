@@ -115,6 +115,17 @@ namespace kTools.Mirrors.Editor
             }
             SetFoldoutState("OutputOptions", m_OutputOptionsFoldout, outputOptions);
             EditorGUILayout.EndFoldoutHeaderGroup();
+            
+            if(outputOptions)
+            {
+                // Renderers
+                if (m_ScopeProp.enumValueIndex == (int) Mirror.OutputScope.Local)
+                {
+                    EditorGUI.indentLevel++;
+                    EditorGUILayout.PropertyField(m_RenderersProp, Styles.Renderers);
+                    EditorGUI.indentLevel--;
+                }
+            }
 
             // Finalize
             serializedObject.ApplyModifiedProperties();
@@ -138,14 +149,6 @@ namespace kTools.Mirrors.Editor
         {
             // Scope
             EditorGUILayout.PropertyField(m_ScopeProp, Styles.Scope);
-
-            // Renderers
-            if(m_ScopeProp.enumValueIndex == (int)Mirror.OutputScope.Local)
-            {
-                EditorGUI.indentLevel++;
-                EditorGUILayout.PropertyField(m_RenderersProp, Styles.Renderers);
-                EditorGUI.indentLevel--;
-            }
 
             // Texture Scale
             EditorGUI.BeginChangeCheck();
