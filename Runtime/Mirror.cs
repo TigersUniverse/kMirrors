@@ -293,6 +293,7 @@ namespace kTools.Mirrors
                 SetShaderUniforms(context, cmd, camera);
             }
             ExecuteCommand(context, cmd);
+            CommandBufferPool.Release(cmd);
         }
 
         void RenderMirror(ScriptableRenderContext context, Camera camera, Camera.MonoOrStereoscopicEye eye)
