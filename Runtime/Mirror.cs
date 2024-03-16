@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.Serialization;
 using UnityEngine.XR;
 using Object = UnityEngine.Object;
 
@@ -38,6 +39,12 @@ namespace kTools.Mirrors
 #region Serialized Fields
         [SerializeField]
         public bool CustomCameraControl;
+
+        [SerializeField]
+        public float MinRenderDistance = 0.01f;
+
+        [SerializeField]
+        public float MaxRenderDistance = 1000f;
         
         [SerializeField]
         float m_Offset;
@@ -312,6 +319,10 @@ namespace kTools.Mirrors
 
         void RenderMirror(ScriptableRenderContext context, Camera camera, Camera.MonoOrStereoscopicEye eye)
         {
+            // Apply settings
+            reflectionCamera.nearClipPlane = MinRenderDistance;
+            reflectionCamera.farClipPlane = MaxRenderDistance;
+            
             // Mirror the view matrix
             var mirrorMatrix = GetMirrorMatrix();
             reflectionCamera.worldToCameraMatrix = GetViewMatrix(camera, eye) * mirrorMatrix;
