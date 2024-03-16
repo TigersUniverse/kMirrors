@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
-using Hypernex.Tools;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.XR;
+using Object = UnityEngine.Object;
 
 namespace kTools.Mirrors
 {
@@ -35,6 +36,9 @@ namespace kTools.Mirrors
 #endregion
 
 #region Serialized Fields
+        [SerializeField]
+        public bool CustomCameraControl;
+        
         [SerializeField]
         float m_Offset;
 
@@ -79,6 +83,7 @@ namespace kTools.Mirrors
             m_TextureScale = 1.0f;
             m_AllowHDR = MirrorCameraOverride.UseSourceCameraSettings;
             m_AllowMSAA = MirrorCameraOverride.UseSourceCameraSettings;
+            OnMirrorCreation.Invoke(this);
         }
 #endregion
 
@@ -157,26 +162,46 @@ namespace kTools.Mirrors
 #endregion
 
 #region State
+        public static Action<Mirror> OnMirrorCreation = mirror => { };
+        public static List<Mirror> Mirrors => new(mirrors);
+        private static List<Mirror> mirrors = new();
+
+        public Action<ScriptableRenderContext, Camera> OnCameraRender = (context, c) => { };
+        private bool didCustom;
+
         void OnEnable()
         {
             // Callbacks
-            RenderPipelineManager.beginCameraRendering += BeginCameraRendering_FromRenderPipeline;
-            AvatarNearClip.BeforeClip += BeginCameraRendering_FromAvatarNearClip;
-            
+            if(!CustomCameraControl)
+                RenderPipelineManager.beginCameraRendering += BeginCameraRendering;
+            else
+            {
+                OnCameraRender += BeginCameraRendering;
+                didCustom = true;
+            }
             // Initialize Components
             InitializeCamera();
+            // Cache
+            mirrors.Add(this);
         }
 
         void OnDisable()
         {
             // Callbacks
-            RenderPipelineManager.beginCameraRendering -= BeginCameraRendering_FromRenderPipeline;
-            AvatarNearClip.BeforeClip -= BeginCameraRendering_FromAvatarNearClip;
+            if(!didCustom)
+                RenderPipelineManager.beginCameraRendering -= BeginCameraRendering;
+            else
+            {
+                OnCameraRender -= BeginCameraRendering;
+                didCustom = false;
+            }
             
             // Dispose RenderTexture
             SafeDestroyObject(m_RenderTexture);
             SafeDestroyObject(m_RenderTextureL);
             SafeDestroyObject(m_RenderTextureR);
+            // Remove Cache
+            mirrors.Remove(this);
         }
 #endregion
 
@@ -218,17 +243,6 @@ namespace kTools.Mirrors
 #endregion
 
 #region Rendering
-
-        void BeginCameraRendering_FromRenderPipeline(ScriptableRenderContext context, Camera camera)
-        {
-            if(AvatarNearClip.Instances.Count > 0)
-                return;
-            BeginCameraRendering(context, camera);
-        }
-
-        void BeginCameraRendering_FromAvatarNearClip(ScriptableRenderContext context, Camera camera) =>
-            BeginCameraRendering(context, camera);
-
         bool IsStereo(Camera camera) => XRSettings.enabled && camera.GetUniversalAdditionalCameraData().allowXRRendering && camera.cameraType != CameraType.SceneView;
 
         void BeginCameraRendering(ScriptableRenderContext context, Camera camera)
